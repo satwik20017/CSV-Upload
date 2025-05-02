@@ -3,10 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { processCSV } from '../csv_helper/csvhelper';
+import { scheduleCSV_JOB } from './csvJOB';
+// import { dbconnections } from '../dbconnections/mysql';
 const app = express();
 
 app.use(express.json());
 
+// dbconnections()
 app.listen(3000, () => {
     console.log(`Connected to Server: PORT 3000`);
 })
@@ -15,6 +18,14 @@ const uploaddir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploaddir)) {
     fs.mkdirSync(uploaddir, { recursive: true });
 }
+
+['pending', 'processed', 'failed'].forEach(dir => {
+    const folderPath = path.join(__dirname, `../schecular-uploads/uploads/${dir}`);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+  });
+  
 const upload = multer({
     dest: path.join(__dirname, '../uploads'),
     fileFilter: (req, file, cb) => {
@@ -39,3 +50,6 @@ app.post('/csv', upload.single('file'), async (req, res) => {
         res.status(500).json({ message: 'Error processing file', error: error.message });
     }
 })
+
+
+scheduleCSV_JOB();
